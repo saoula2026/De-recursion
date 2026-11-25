@@ -660,20 +660,40 @@ export default function App() {
       <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-emerald-600" />
 
       {/* Top Academic Header */}
-      <div className="flex items-start justify-between gap-6">
-        <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-extrabold bg-blue-700 text-white shadow-sm">
-            <BookOpen className="w-4 h-4" />
-            <span>{t.university}</span>
+      <div className="flex items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <img
+            src="/univlogo.jpg"
+            alt="Université Ahmed Ben Yahia El-Wancharissi — Tissemsilt"
+            className="w-14 h-14 object-contain rounded-xl p-1 border border-slate-200 dark:border-slate-700 bg-white shadow-sm shrink-0"
+            onError={(e) => {
+              if (e.currentTarget.src !== 'https://pmb.univ-tissemsilt.dz/styles/zen/images/zen_pers/univlogo.jpg') {
+                e.currentTarget.src = 'https://pmb.univ-tissemsilt.dz/styles/zen/images/zen_pers/univlogo.jpg';
+              } else {
+                e.currentTarget.style.display = 'none';
+              }
+            }}
+          />
+          <div className="space-y-1">
+            <div className={`text-base font-black tracking-tight ${tokens.textMain}`}>
+              Université Ahmed Ben Yahia El-Wancharissi — Tissemsilt
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-extrabold bg-blue-700 text-white shadow-sm">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>{t.university}</span>
+              </div>
+              <span className={`text-xs font-bold ${tokens.textMuted}`}>•</span>
+              <p className={`text-sm font-extrabold ${tokens.textMuted}`}>{t.level}</p>
+            </div>
           </div>
-          <p className={`text-lg font-extrabold ${tokens.textMuted}`}>{t.level}</p>
         </div>
 
-        <div className={`px-5 py-3 rounded-2xl border text-end ${tokens.cardBg}`}>
+        <div className={`px-5 py-3 rounded-2xl border text-end shrink-0 ${tokens.cardBg}`}>
           <div className={`text-xs font-bold uppercase tracking-wider ${tokens.textSoft}`}>
             {t.moduleLabel}
           </div>
-          <div className={`text-lg font-black ${tokens.accentBlue}`}>{t.moduleName}</div>
+          <div className={`text-base font-black ${tokens.accentBlue}`}>{t.moduleName}</div>
         </div>
       </div>
 
