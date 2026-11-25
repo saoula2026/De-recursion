@@ -661,11 +661,11 @@ export default function App() {
 
       {/* Top Academic Header */}
       <div className="flex items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <img
             src="/univlogo.jpg"
             alt="Université Ahmed Ben Yahia El-Wancharissi — Tissemsilt"
-            className="w-14 h-14 object-contain rounded-xl p-1 border border-slate-200 dark:border-slate-700 bg-white shadow-sm shrink-0"
+            className="w-28 h-28 object-contain rounded-2xl p-2 border-2 border-slate-200 dark:border-slate-700 bg-white shadow-md shrink-0"
             onError={(e) => {
               if (e.currentTarget.src !== 'https://pmb.univ-tissemsilt.dz/styles/zen/images/zen_pers/univlogo.jpg') {
                 e.currentTarget.src = 'https://pmb.univ-tissemsilt.dz/styles/zen/images/zen_pers/univlogo.jpg';
@@ -674,26 +674,38 @@ export default function App() {
               }
             }}
           />
-          <div className="space-y-1">
-            <div className={`text-base font-black tracking-tight ${tokens.textMain}`}>
-              Université Ahmed Ben Yahia El-Wancharissi — Tissemsilt
+          <div className="flex flex-col justify-center space-y-1">
+            <div className={`text-[11px] font-bold uppercase tracking-wider ${tokens.textSoft}`}>
+              {lang === 'ar'
+                ? 'الجمهورية الجزائرية الديمقراطية الشعبية'
+                : 'République Algérienne Démocratique et Populaire'}
             </div>
-            <div className="flex items-center gap-2.5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-extrabold bg-blue-700 text-white shadow-sm">
+            <div className={`text-xl font-black tracking-tight leading-snug ${tokens.textMain}`}>
+              {lang === 'ar'
+                ? 'جامعة أحمد بن يحيى الونشريسي — تيسمسيلت'
+                : 'Université Ahmed Ben Yahia El-Wancharissi — Tissemsilt'}
+            </div>
+            <div className={`text-xs font-semibold ${tokens.textMuted}`}>
+              {lang === 'ar'
+                ? 'كلية العلوم والتكنولوجيا • قسم الرياضيات والإعلام الآلي'
+                : 'Faculté des Sciences et de la Technologie • Département MI'}
+            </div>
+            <div className="pt-0.5">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-extrabold border ${tokens.badgeBlue}`}>
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>{t.university}</span>
-              </div>
-              <span className={`text-xs font-bold ${tokens.textMuted}`}>•</span>
-              <p className={`text-sm font-extrabold ${tokens.textMuted}`}>{t.level}</p>
+                <span>{t.level}</span>
+              </span>
             </div>
           </div>
         </div>
 
-        <div className={`px-5 py-3 rounded-2xl border text-end shrink-0 ${tokens.cardBg}`}>
-          <div className={`text-xs font-bold uppercase tracking-wider ${tokens.textSoft}`}>
+        <div className={`px-4 py-2.5 rounded-xl border text-end shrink-0 self-center ${tokens.cardBg}`}>
+          <div className={`text-[11px] font-bold uppercase tracking-wider ${tokens.textSoft}`}>
             {t.moduleLabel}
           </div>
-          <div className={`text-base font-black ${tokens.accentBlue}`}>{t.moduleName}</div>
+          <div className={`text-sm font-extrabold ${tokens.accentBlue}`}>
+            {t.moduleName}
+          </div>
         </div>
       </div>
 
