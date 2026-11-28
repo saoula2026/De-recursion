@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Sun,
   Moon,
-  Printer,
+  Maximize2,
+  Minimize2,
   ChevronLeft,
   ChevronRight,
   Layers,
@@ -12,15 +13,14 @@ import {
   Play,
   Pause,
   StepForward,
-  Check,
-  Copy,
   GitBranch,
   Zap,
   ShieldCheck,
   Search,
   BookOpen,
-  Code2,
-  Activity
+  Activity,
+  Workflow,
+  CheckCircle2
 } from 'lucide-react';
 
 // ============================================================================
@@ -29,6 +29,7 @@ import {
 const TRANSLATIONS = {
   fr: {
     dir: 'ltr',
+    faculty: 'Faculté des Mathématiques et de l’Informatique',
     university: 'Département de Mathématiques et Informatique',
     level: 'Master 1 Intelligence Artificielle • Semestre 7',
     moduleLabel: 'Module :',
@@ -44,7 +45,8 @@ const TRANSLATIONS = {
     roadmap3: '3. Dé-récursivation : Boucle & Pile Manuelle en C (2/3 Pratique)',
     daylightMode: 'Mode Amphithéâtre',
     darkMode: 'Mode Sombre',
-    printBtn: 'Imprimer / PDF (6 Pages)',
+    fullscreenBtn: 'Plein Écran',
+    exitFullscreenBtn: 'Quitter Plein Écran',
     slideLabel: 'Page',
 
     // Slide 2
@@ -82,14 +84,14 @@ const TRANSLATIONS = {
     s3NonTailTitle: '1. Récursion Non-Terminale',
     s3NonTailBadge: 'O(n) Pile • Opération en attente',
     s3NonTailDesc: 'La multiplication (n * ...) attend le retour de l’appel : impossible d’écraser le frame.',
-    s3TailTitle: '2. Récursion Terminale (Tail Recursion)',
+    s3TailTitle: '2. Récursion Terminale',
     s3TailBadge: 'O(1) Mémoire • TCO / Boucle while',
     s3TailDesc: 'L’appel récursif est la dernière action : le compilateur réutilise un unique bloc mémoire.',
     s3SimHeader: 'Simulation Synchronisée (n = 4) :',
     s3StepBtn: 'Étape suivante (Step)',
     s3ResetBtn: 'Reset',
-    s3LaneNonTail: 'Pile Non-Terminale (Accumulation de frames)',
-    s3LaneTail: 'Cadre Unique Réutilisé (O(1) Constant)',
+    s3LaneNonTail: 'Récursion Non-Terminale (Accumulation de frames)',
+    s3LaneTail: 'Récursion Terminale (Cadre unique réutilisé O(1))',
 
     // Slide 4
     s4Tag: '2/3 PRATIQUE • EXEMPLE 1 (CHAPITRE V)',
@@ -101,7 +103,7 @@ const TRANSLATIONS = {
     s4NaiveCallsLabel: 'Appels récursifs (~2ⁿ) :',
     s4NaiveTime: 'Temps : O(2ⁿ) — Explosion exponentielle',
     s4NaiveSpace: 'Espace : O(n) frames actifs dans la Call Stack',
-    s4OptTitle: 'Version Dé-récursivée (Boucle for : a, b)',
+    s4OptTitle: 'Dé-récursivation (Boucle for : a, b)',
     s4OptSub: 'Élimination totale de la récursion par glissement de 2 variables',
     s4OptIterLabel: 'Itérations de boucle :',
     s4OptTime: 'Temps : O(n) — Linéaire',
@@ -131,35 +133,43 @@ const TRANSLATIONS = {
     s5FoundAlert: 'Trouvée ! Arrêt immédiat (break) & pile manuelle libérée.',
     s5NotFoundAlert: 'Valeur absente après parcours complet.',
 
-    // Slide 6
-    s6Tag: '2/3 PRATIQUE • CODE C & SYNTHÈSE',
-    s6Title: 'Implémentation C (TP) & Bilan Comparatif',
-    s6Desc: 'Code C optimisé sans empilement de pointeurs NULL et synthèse des performances.',
-    s6CodeTitle: 'Code C : Pile Manuelle & Parcours en Profondeur',
-    s6Copy: 'Copier le code C',
-    s6Copied: 'Copié !',
-    s6MatrixTitle: 'Tableau Comparatif de Complexité',
+    // Slide 6: Engineering Synthesis & Decision Rules
+    s6Tag: '2/3 PRATIQUE • SYNTHÈSE & DÉCISION',
+    s6Title: 'Synthèse Comparative & Règles de Décision Ingénieur',
+    s6Desc: 'Bilan des complexités spatio-temporelles et heuristiques formelles de dé-récursivation.',
+    s6MatrixTitle: 'Matrice Comparative de Complexité',
     s6ColApproach: 'Approche',
     s6ColTime: 'Temps',
-    s6ColSpace: 'Espace',
+    s6ColSpace: 'Mémoire / Pile',
     s6ColRisk: 'Stabilité OS',
-    s6Row1Name: 'Récursion Non-Terminale (Arbre)',
+    s6Row1Name: 'Récursion Non-Terminale',
     s6Row1Time: 'O(n)',
-    s6Row1Space: 'O(n) Pile OS',
-    s6Row1Risk: 'Stack Overflow',
-    s6Row2Name: 'Récursion Terminale (Fact Tail)',
+    s6Row1Space: 'O(h) Call Stack OS',
+    s6Row1Risk: 'Risque Stack Overflow',
+    s6Row2Name: 'Récursion Terminale',
     s6Row2Time: 'O(n)',
-    s6Row2Space: 'O(1) (TCO)',
-    s6Row2Risk: 'Sécurisé',
-    s6Row3Name: 'Dé-récursivation (Pile Manuelle)',
-    s6Row3Time: 'O(n)*',
-    s6Row3Space: 'O(n) Contrôlé',
+    s6Row2Space: 'O(1) via TCO / Boucle',
+    s6Row2Risk: 'Sécurisé (O(1))',
+    s6Row3Name: 'Dé-récursivation (Boucle + Pile Manuelle)',
+    s6Row3Time: 'O(n)',
+    s6Row3Space: 'O(h) Contrôlé (Heap)',
     s6Row3Risk: '0% Risque OS',
-    s6Note: '*Aucun surcoût asymptotique : push() et pop() s’exécutent en temps constant O(1), tout en permettant un arrêt immédiat (break).'
+    s6MatrixNote: 'h = hauteur de l’arbre ou profondeur d’appels (h ≤ n). La dé-récursivation déplace la charge de la fragile pile système OS vers la mémoire contrôlée (Tas).',
+    s6RulesTitle: 'Règles de Décision d’Ingénierie',
+    s6Rule1Badge: 'RÈGLE 1 • TERMINALE',
+    s6Rule1Title: 'Récursion Terminale → Boucle simple O(1)',
+    s6Rule1Desc: 'Aucune opération en attente après l’appel : transformation directe en boucle while/for avec accumulateur. Mémoire O(1) sans aucune pile.',
+    s6Rule2Badge: 'RÈGLE 2 • NON-TERMINALE',
+    s6Rule2Title: 'Récursion Non-Terminale → while + Pile Manuelle LIFO',
+    s6Rule2Desc: 'Opérations en attente ou embranchements : simuler le Call Stack avec une pile LIFO explicite dans le Tas. Empiler dans l’ordre inverse des appels (ex: droit puis gauche).',
+    s6Rule3Badge: 'RÈGLE 3 • COÛT & CONTRÔLE',
+    s6Rule3Title: 'Primitives O(1) → Temps Asymptotique Préservé',
+    s6Rule3Desc: 'push() et pop() s’exécutent en temps constant O(1) sans surcoût global (O(n) conservé), avec libération immédiate et arrêt anticipé (break) sans dérouler la pile.'
   },
 
   ar: {
     dir: 'rtl',
+    faculty: 'كلية الرياضيات والإعلام الآلي',
     university: 'قسم الرياضيات والإعلام الآلي',
     level: 'ماستر 1 ذكاء اصطناعي • السداسي السابع',
     moduleLabel: 'المقياس :',
@@ -175,7 +185,8 @@ const TRANSLATIONS = {
     roadmap3: '3. إزالة التكرارية : حلقة ومكدس يدوي بلغة C (2/3 تطبيقي)',
     daylightMode: 'وضع المدرج المضيء',
     darkMode: 'الوضع الليلي',
-    printBtn: 'طباعة / PDF (6 صفحات)',
+    fullscreenBtn: 'ملء الشاشة',
+    exitFullscreenBtn: 'إنهاء ملء الشاشة',
     slideLabel: 'صفحة',
 
     // Slide 2
@@ -210,29 +221,29 @@ const TRANSLATIONS = {
     s3Tag: '1/3 الجانب النظري • الجزء 2',
     s3Title: 'التكرارية الذيلية مقابل غير الذيلية (مسارا التحويل)',
     s3Desc: 'وجود عمليات معلقة بعد الاستدعاء الذاتي هو الذي يحدد طريقة التحويل المناسبة.',
-    s3NonTailTitle: '1. التكرارية غير الذيلية (Non-Terminale)',
+    s3NonTailTitle: '1. التكرارية غير الذيلية (Récursion Non-Terminale)',
     s3NonTailBadge: 'ذاكرة O(n) • عملية معلقة',
     s3NonTailDesc: 'عملية الضرب (n * ...) تنتظر عودة الاستدعاء : لا يمكن مسح الإطار الحالي.',
-    s3TailTitle: '2. التكرارية الذيلية (Tail Recursion)',
+    s3TailTitle: '2. التكرارية الذيلية (Récursion Terminale)',
     s3TailBadge: 'ذاكرة O(1) • حلقة while / TCO',
     s3TailDesc: 'الاستدعاء الذاتي هو آخر تعليمة : يعيد المترجم استخدام نفس الإطار الوحيد.',
     s3SimHeader: 'محاكاة متزامنة (n = 4) :',
     s3StepBtn: 'الخطوة التالية (Step)',
     s3ResetBtn: 'إعادة ضبط',
-    s3LaneNonTail: 'مكدس غير الذيلية (تراكم الإطارات)',
-    s3LaneTail: 'إطار وحيد مُعاد استخدامه (O(1) ثابت)',
+    s3LaneNonTail: 'التكرارية غير الذيلية (تراكم الإطارات)',
+    s3LaneTail: 'التكرارية الذيلية (إطار وحيد مُعاد استخدامه O(1))',
 
     // Slide 4
     s4Tag: '2/3 الجانب التطبيقي • مثال 1 (الفصل الخامس)',
     s4Title: 'فيبوناتشي : تكرارية مزدوجة غير ذيلية مقابل إزالة التكرارية',
     s4Desc: 'مقارنة الانفجار الأسي O(2ⁿ) مع النسخة التكرارية ذات الذاكرة الثابتة O(1).',
     s4SliderLabel: 'قيمة n :',
-    s4NaiveTitle: 'تكرارية مزدوجة غير ذيلية (Récursif)',
+    s4NaiveTitle: 'تكرارية مزدوجة غير ذيلية',
     s4NaiveSub: 'fib(n) = fib(n-1) + fib(n-2) تولد شجرة استدعاءات متكررة',
     s4NaiveCallsLabel: 'الاستدعاءات المتولدة (~2ⁿ) :',
     s4NaiveTime: 'الزمن : O(2ⁿ) — انفجار أسي',
     s4NaiveSpace: 'المكان : O(n) إطار نشط في Call Stack',
-    s4OptTitle: 'النسخة المُزالة التكرارية (حلقة for : a, b)',
+    s4OptTitle: 'إزالة التكرارية (حلقة for : a, b)',
     s4OptSub: 'إلغاء الاستدعاء الذاتي كلياً بتحديث متغيرين فقط',
     s4OptIterLabel: 'دورات الحلقة :',
     s4OptTime: 'الزمن : O(n) — خطي',
@@ -262,35 +273,43 @@ const TRANSLATIONS = {
     s5FoundAlert: 'تم العثور عليها ! توقف فوري (break) وتفريغ المكدس اليدوي.',
     s5NotFoundAlert: 'القيمة غير موجودة بعد اكتمال الاجتياز.',
 
-    // Slide 6
-    s6Tag: '2/3 الجانب التطبيقي • كود C والخلاصة',
-    s6Title: 'التنفيذ بلغة C وحصيلة المقارنة الهندسية',
-    s6Desc: 'كود C نظيف يتجنب دفع المؤشرات الفارغة NULL مع ملخص الأداء.',
-    s6CodeTitle: 'كود C : المكدس اليدوي والاجتياز بالعمق',
-    s6Copy: 'نسخ الكود',
-    s6Copied: 'تم النسخ !',
-    s6MatrixTitle: 'جدول مقارنة التعقيد',
+    // Slide 6: Engineering Synthesis & Decision Rules
+    s6Tag: '2/3 الجانب التطبيقي • الخلاصة والقرار الهندسي',
+    s6Title: 'الخلاصة المقارنة وقواعد القرار الهندسي',
+    s6Desc: 'مقارنة التعقيد الزمني والمكاني والقواعد المنهجية لإزالة التكرارية.',
+    s6MatrixTitle: 'مصفوفة مقارنة التعقيد',
     s6ColApproach: 'الطريقة',
     s6ColTime: 'الزمن',
-    s6ColSpace: 'الذاكرة',
-    s6ColRisk: 'أمان النظام',
-    s6Row1Name: 'تكرارية غير ذيلية (شجرة)',
+    s6ColSpace: 'الذاكرة / المكدس',
+    s6ColRisk: 'أمان النظام OS',
+    s6Row1Name: 'تكرارية غير ذيلية (Non-Terminale)',
     s6Row1Time: 'O(n)',
-    s6Row1Space: 'O(n) مكدس النظام',
+    s6Row1Space: 'O(h) مكدس النظام OS',
     s6Row1Risk: 'خطر Stack Overflow',
-    s6Row2Name: 'تكرارية ذيلية (Fact Tail)',
+    s6Row2Name: 'تكرارية ذيلية (Terminale)',
     s6Row2Time: 'O(n)',
-    s6Row2Space: 'O(1) (TCO)',
-    s6Row2Risk: 'آمن',
-    s6Row3Name: 'إزالة التكرارية (مكدس يدوي)',
-    s6Row3Time: 'O(n)*',
-    s6Row3Space: 'O(n) مراقب',
-    s6Row3Risk: '0% خطر انهيار',
-    s6Note: '*لا يوجد أي عبء زمني إضافي : عمليات push و pop تتم في زمن ثابت O(1) مع إمكانية التوقف الفوري (break).'
+    s6Row2Space: 'O(1) عبر TCO / حلقة',
+    s6Row2Risk: 'آمن (ذاكرة ثابتة)',
+    s6Row3Name: 'إزالة التكرارية (حلقة + مكدس يدوي)',
+    s6Row3Time: 'O(n)',
+    s6Row3Space: 'O(h) مراقب (الكومة)',
+    s6Row3Risk: '0% خطر انهيار OS',
+    s6MatrixNote: 'h = عمق الشجرة أو عمق الاستدعاء (h ≤ n). إزالة التكرارية تنقل العبء من مكدس النظام الضيق إلى الذاكرة الديناميكية المتحكم بها (الكومة).',
+    s6RulesTitle: 'قواعد القرار الهندسي الثلاث',
+    s6Rule1Badge: 'القاعدة 1 • ذيلية',
+    s6Rule1Title: 'تكرارية ذيلية ← حلقة بسيطة O(1)',
+    s6Rule1Desc: 'لا توجد أي عملية معلقة بعد الاستدعاء : تحويل مباشر إلى حلقة while/for مع مجمّع. ذاكرة O(1) بدون أي مكدس.',
+    s6Rule2Badge: 'القاعدة 2 • غير ذيلية',
+    s6Rule2Title: 'تكرارية غير ذيلية ← while + مكدس يدوي LIFO',
+    s6Rule2Desc: 'وجود عمليات معلقة أو تفرعات : محاكاة Call Stack بمكدس LIFO صريح في الكومة. الدفع بالترتيب العكسي للاستدعاءات (الأيمن ثم الأيسر).',
+    s6Rule3Badge: 'القاعدة 3 • الكفاءة والأمان',
+    s6Rule3Title: 'عمليات O(1) ← الحفاظ على التعقيد الزمني',
+    s6Rule3Desc: 'عمليات push و pop تنفذ في زمن ثابت O(1) مما يحافظ على التعقيد الأصلي O(n)، مع إمكانية التوقف الفوري (break) دون تفريغ قسري للمكدس.'
   },
 
   en: {
     dir: 'ltr',
+    faculty: 'Faculty of Mathematics and Computer Science',
     university: 'Department of Mathematics and Computer Science',
     level: 'Master 1 in Artificial Intelligence • Semester 7',
     moduleLabel: 'Course:',
@@ -306,7 +325,8 @@ const TRANSLATIONS = {
     roadmap3: '3. De-recursion: Loop & Manual Stack in C (2/3 Practice)',
     daylightMode: 'Lecture Hall Mode',
     darkMode: 'Dark Mode',
-    printBtn: 'Print / PDF (6 Pages)',
+    fullscreenBtn: 'Fullscreen',
+    exitFullscreenBtn: 'Exit Fullscreen',
     slideLabel: 'Page',
 
     // Slide 2
@@ -350,8 +370,8 @@ const TRANSLATIONS = {
     s3SimHeader: 'Synchronized Simulation (n = 4):',
     s3StepBtn: 'Next Step',
     s3ResetBtn: 'Reset',
-    s3LaneNonTail: 'Non-Tail Stack (Accumulating frames)',
-    s3LaneTail: 'Single Reused Frame (O(1) Constant)',
+    s3LaneNonTail: 'Non-Tail Recursion (Frame Accumulation)',
+    s3LaneTail: 'Tail Recursion (Single Reused Frame O(1))',
 
     // Slide 4
     s4Tag: '2/3 PRACTICE • EXAMPLE 1 (CHAPTER V)',
@@ -393,31 +413,38 @@ const TRANSLATIONS = {
     s5FoundAlert: 'Found! Immediate break & manual stack cleared.',
     s5NotFoundAlert: 'Value not found after full traversal.',
 
-    // Slide 6
-    s6Tag: '2/3 PRACTICE • C CODE & SUMMARY',
-    s6Title: 'C Lab Implementation & Comparative Summary',
-    s6Desc: 'Clean C code guarding against NULL pushes alongside algorithmic performance metrics.',
-    s6CodeTitle: 'C Code: Manual Stack & Depth-First Traversal',
-    s6Copy: 'Copy C Code',
-    s6Copied: 'Copied!',
+    // Slide 6: Engineering Synthesis & Decision Rules
+    s6Tag: '2/3 PRACTICE • SYNTHESIS & DECISION',
+    s6Title: 'Comparative Synthesis & Engineering Decision Rules',
+    s6Desc: 'Complexity matrix analysis and rigorous engineering rules for de-recursion.',
     s6MatrixTitle: 'Complexity Comparison Matrix',
     s6ColApproach: 'Approach',
     s6ColTime: 'Time',
-    s6ColSpace: 'Space',
-    s6ColRisk: 'OS Safety',
-    s6Row1Name: 'Non-Tail Recursion (Tree)',
+    s6ColSpace: 'Memory / Stack',
+    s6ColRisk: 'OS Stability',
+    s6Row1Name: 'Non-Tail Recursion',
     s6Row1Time: 'O(n)',
-    s6Row1Space: 'O(n) OS Stack',
-    s6Row1Risk: 'Stack Overflow',
-    s6Row2Name: 'Tail Recursion (Fact Tail)',
+    s6Row1Space: 'O(h) OS Call Stack',
+    s6Row1Risk: 'Stack Overflow Risk',
+    s6Row2Name: 'Tail Recursion',
     s6Row2Time: 'O(n)',
-    s6Row2Space: 'O(1) (TCO)',
-    s6Row2Risk: 'Safe',
-    s6Row3Name: 'De-recursion (Manual Stack)',
-    s6Row3Time: 'O(n)*',
-    s6Row3Space: 'O(n) Controlled',
-    s6Row3Risk: '0% OS Risk',
-    s6Note: '*Zero asymptotic overhead: push() and pop() run in O(1) constant time while enabling immediate early exit (break).'
+    s6Row2Space: 'O(1) via TCO / Loop',
+    s6Row2Risk: 'Safe (O(1) Memory)',
+    s6Row3Name: 'De-recursion (Loop + Manual Stack)',
+    s6Row3Time: 'O(n)',
+    s6Row3Space: 'O(h) Controlled (Heap)',
+    s6Row3Risk: '0% OS Crash Risk',
+    s6MatrixNote: 'h = recursion depth or tree height (h ≤ n). De-recursion shifts memory burden away from the narrow OS call stack into controlled heap storage.',
+    s6RulesTitle: 'Engineering Decision Rules',
+    s6Rule1Badge: 'RULE 1 • TAIL',
+    s6Rule1Title: 'Tail Recursion → Simple Loop O(1)',
+    s6Rule1Desc: 'No pending operations after recursive call: direct transformation into a while/for loop with an accumulator. O(1) space with zero stack frames.',
+    s6Rule2Badge: 'RULE 2 • NON-TAIL',
+    s6Rule2Title: 'Non-Tail Recursion → while + Manual LIFO Stack',
+    s6Rule2Desc: 'Pending calculations or multiple branching (trees): replace OS Call Stack with an explicit LIFO stack in Heap. Push child states in reverse invocation order.',
+    s6Rule3Badge: 'RULE 3 • OVERHEAD & CONTROL',
+    s6Rule3Title: 'O(1) Primitives → Asymptotic Time Preserved',
+    s6Rule3Desc: 'push() and pop() run in constant O(1) time preserving overall O(n) runtime, while enabling early exit (break) without unwinding the stack.'
   }
 };
 
@@ -472,35 +499,6 @@ function generateTreeSteps(mode, targetVal) {
 }
 
 // ============================================================================
-// CONCISE, PRINT-SAFE C IMPLEMENTATION (SLIDE 6 — ~24 LINES, ZERO OVERFLOW)
-// ============================================================================
-const C_CODE_SNIPPET = `#include <stdio.h>
-#define MAX 100
-
-typedef struct Noeud {
-    int val;
-    struct Noeud *gauche, *droit;
-} Noeud;
-
-typedef struct { Noeud* items[MAX]; int sommet; } Pile;
-
-void push(Pile* p, Noeud* n) { if (p->sommet < MAX - 1) p->items[++(p->sommet)] = n; }
-Noeud* pop(Pile* p) { return (p->sommet >= 0) ? p->items[(p->sommet)--] : NULL; }
-
-void parcours_iteratif(Noeud* racine) {
-    if (!racine) return;
-    Pile p = { .sommet = -1 };
-    push(&p, racine);
-
-    while (p.sommet != -1) {
-        Noeud* curr = pop(&p);                 // O(1)
-        printf("%d ", curr->val);              // Traitement
-        if (curr->droit)  push(&p, curr->droit);   // 1. Droit
-        if (curr->gauche) push(&p, curr->gauche);  // 2. Gauche (Sommet)
-    }
-}`;
-
-// ============================================================================
 // MAIN APPLICATION COMPONENT
 // ============================================================================
 export default function App() {
@@ -508,6 +506,7 @@ export default function App() {
   const [theme, setTheme] = useState('light'); // 'light' (Daylight default) | 'dark'
   const [lang, setLang] = useState('fr'); // 'fr' | 'ar' | 'en'
   const [scale, setScale] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Slide 2: Call Stack Simulator (Strictly starts at 0 frames, max 5 before overflow)
   const MAX_OS_FRAMES = 5;
@@ -526,25 +525,47 @@ export default function App() {
   const [treeStepIdx, setTreeStepIdx] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
-  // Slide 6: Copy C Code State
-  const [copied, setCopied] = useState(false);
-
   const stageWrapperRef = useRef(null);
   const t = TRANSLATIONS[lang];
   const isDark = theme === 'dark';
 
-  // Responsive 16:9 Scaling Engine
+  // Responsive Fullscreen Change Listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  };
+
+  // Responsive 16:9 Scaling Engine (Clean edge-to-edge calculation)
   useEffect(() => {
     const updateScale = () => {
       if (!stageWrapperRef.current) return;
       const rect = stageWrapperRef.current.getBoundingClientRect();
-      const availW = Math.max(320, rect.width - 24);
-      const availH = Math.max(240, rect.height - 20);
+      const availW = Math.max(320, rect.width - 16);
+      const availH = Math.max(240, rect.height - 16);
       setScale(Math.min(availW / 1280, availH / 720));
     };
     updateScale();
     window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    let ro;
+    if (typeof ResizeObserver !== 'undefined' && stageWrapperRef.current) {
+      ro = new ResizeObserver(updateScale);
+      ro.observe(stageWrapperRef.current);
+    }
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      ro?.disconnect();
+    };
   }, []);
 
   // Keyboard Arrow Navigation
@@ -653,7 +674,7 @@ export default function App() {
   );
 
   // ==========================================================================
-  // SLIDE 1: PAGE DE GARDE (LATIN STUDENT NAMES ONLY, NO EDIT INPUTS)
+  // SLIDE 1: PAGE DE GARDE (ACADEMIC CREDITS & FACULTY NAME)
   // ==========================================================================
   const renderSlide1 = () => (
     <div className={`w-[1280px] h-[720px] p-10 flex flex-col justify-between relative overflow-hidden ${tokens.slideBg}`}>
@@ -685,10 +706,8 @@ export default function App() {
                 ? 'جامعة أحمد بن يحيى الونشريسي — تيسمسيلت'
                 : 'Université Ahmed Ben Yahia El-Wancharissi — Tissemsilt'}
             </div>
-            <div className={`text-xs font-semibold ${tokens.textMuted}`}>
-              {lang === 'ar'
-                ? 'كلية العلوم والتكنولوجيا • قسم الرياضيات والإعلام الآلي'
-                : 'Faculté des Sciences et de la Technologie • Département MI'}
+            <div className={`text-xs font-extrabold ${tokens.accentBlue}`}>
+              {t.faculty}
             </div>
             <div className="pt-0.5">
               <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-extrabold border ${tokens.badgeBlue}`}>
@@ -716,7 +735,7 @@ export default function App() {
             {t.exposeBadge}
           </span>
           <span className={`px-3.5 py-1.5 rounded-xl text-sm font-extrabold border ${tokens.badgeEmerald}`}>
-            Call Stack • TCO • LIFO • Langage C
+            Call Stack • TCO • LIFO • Complexité
           </span>
         </div>
 
@@ -741,7 +760,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Bottom Credits: Supervisor + 3 Students (Latin Script Only) */}
+      {/* Bottom Credits: Supervisor + 3 Students (Strictly required names) */}
       <div className="grid grid-cols-12 gap-5 items-stretch">
         <div className={`col-span-4 p-5 rounded-2xl border flex flex-col justify-center ${isDark ? 'bg-indigo-950/40 border-indigo-500/30' : 'bg-blue-50/80 border-blue-200'}`}>
           <span className={`text-xs font-extrabold uppercase tracking-wider mb-1 ${tokens.accentBlue}`}>
@@ -756,7 +775,7 @@ export default function App() {
             {t.presentedBy}
           </div>
           <div className="grid grid-cols-3 gap-3.5" dir="ltr">
-            {['Saoula Youcef Abderrazak', 'Azzedine Hallali', 'Boughana Samir'].map((studentName, idx) => (
+            {['Saoula Youcef Abderrazak', 'Izzedine Hallali', 'Boughana Samir'].map((studentName, idx) => (
               <div key={idx} className={`p-3.5 rounded-xl border flex items-center gap-3 ${tokens.cardSubtle}`}>
                 <span className="w-7 h-7 rounded-full bg-blue-700 text-white text-xs font-black flex items-center justify-center shrink-0">
                   {idx + 1}
@@ -919,7 +938,7 @@ export default function App() {
               </div>
             )}
 
-            <div className="flex items-center gap-2 print:hidden">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={isOverflow}
@@ -1008,7 +1027,7 @@ export default function App() {
               </span>
             </div>
 
-            <div className="flex items-center gap-2 print:hidden">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setStep3((s) => (s >= 5 ? 1 : s + 1))}
@@ -1100,7 +1119,7 @@ export default function App() {
             max={30}
             value={fibN}
             onChange={(e) => setFibN(Number(e.target.value))}
-            className="flex-1 max-w-xl h-2.5 bg-slate-300 rounded-lg cursor-pointer accent-blue-700 print:hidden"
+            className="flex-1 max-w-xl h-2.5 bg-slate-300 rounded-lg cursor-pointer accent-blue-700"
           />
 
           <div className={`text-base font-mono font-black px-4 py-1.5 rounded-xl border ${tokens.cardSubtle}`}>
@@ -1201,7 +1220,7 @@ export default function App() {
         {renderSlideHeader(t.s5Tag, t.s5Title, t.s5Desc, 5)}
 
         {/* Top Interactive Controls Bar */}
-        <div className="flex items-center justify-between gap-3 mb-2 print:hidden">
+        <div className="flex items-center justify-between gap-3 mb-2">
           {/* Mode Switch + Custom Value Input */}
           <div className="flex items-center gap-2">
             <button
@@ -1453,83 +1472,170 @@ export default function App() {
   };
 
   // ==========================================================================
-  // SLIDE 6: [2/3 PRATIQUE — CODE C & SYNTHÈSE] PRINT-SAFE C IMPLEMENTATION
+  // SLIDE 6: [2/3 PRATIQUE — SYNTHÈSE COMPARATIVE & RÈGLES DE DÉCISION INGÉNIEUR]
   // ==========================================================================
   const renderSlide6 = () => {
-    const handleCopy = () => {
-      navigator.clipboard?.writeText(C_CODE_SNIPPET);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    };
-
     return (
       <div className={`w-[1280px] h-[720px] p-9 flex flex-col justify-between ${tokens.slideBg}`}>
         {renderSlideHeader(t.s6Tag, t.s6Title, t.s6Desc, 6)}
 
         <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
-          {/* Left Panel (7 cols = ~58%): Compact Print-Safe C Code (Zero Scrollbar, Zero Overflow) */}
-          <div className="col-span-7 p-4 rounded-2xl border border-slate-800 bg-[#0B1120] text-slate-100 flex flex-col justify-between">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-sky-400 font-extrabold text-sm">
-                <Code2 className="w-4 h-4" />
-                <span>{t.s6CodeTitle}</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="px-3 py-1 rounded-lg text-xs font-extrabold bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1.5 transition print:hidden"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? t.s6Copied : t.s6Copy}</span>
-              </button>
-            </div>
-
-            <pre className="font-mono text-[13px] leading-[1.48] text-slate-100 my-auto" dir="ltr">
-              <code>{C_CODE_SNIPPET}</code>
-            </pre>
-          </div>
-
-          {/* Right Panel (5 cols = ~42%): Complexity Synthesis Table */}
-          <div className={`col-span-5 p-5 rounded-2xl border flex flex-col justify-between ${tokens.cardBg}`}>
+          {/* Left Panel (7 cols): Complexity Comparison Matrix */}
+          <div className={`col-span-7 p-5 rounded-2xl border flex flex-col justify-between ${tokens.cardBg}`}>
             <div>
-              <h3 className={`text-lg font-black mb-3 ${tokens.textMain}`}>{t.s6MatrixTitle}</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-base font-black flex items-center gap-2 ${tokens.textMain}`}>
+                  <Activity className="w-5 h-5 text-blue-700 dark:text-sky-400" />
+                  <span>{t.s6MatrixTitle}</span>
+                </h3>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-extrabold border ${tokens.badgeBlue}`}>
+                  O(n) • O(h) • O(1)
+                </span>
+              </div>
 
-              <div className="rounded-xl border overflow-hidden border-slate-300/80 dark:border-slate-700">
+              <div className="rounded-xl border overflow-hidden border-slate-300/80 dark:border-slate-700 shadow-sm">
                 <table className="w-full text-start border-collapse text-xs">
                   <thead>
                     <tr className="bg-blue-700 text-white">
-                      <th className="p-3 font-black">{t.s6ColApproach}</th>
-                      <th className="p-3 font-black">{t.s6ColTime}</th>
-                      <th className="p-3 font-black">{t.s6ColSpace}</th>
-                      <th className="p-3 font-black">{t.s6ColRisk}</th>
+                      <th className="p-3 text-start font-black">{t.s6ColApproach}</th>
+                      <th className="p-3 text-center font-black">{t.s6ColTime}</th>
+                      <th className="p-3 text-center font-black">{t.s6ColSpace}</th>
+                      <th className="p-3 text-end font-black">{t.s6ColRisk}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-bold">
+                    {/* Row 1: Récursion Non-Terminale */}
                     <tr className={tokens.cardSubtle}>
-                      <td className="p-3 font-extrabold">{t.s6Row1Name}</td>
-                      <td className="p-3 font-mono">{t.s6Row1Time}</td>
-                      <td className="p-3 text-rose-700 dark:text-rose-400">{t.s6Row1Space}</td>
-                      <td className="p-3 text-rose-700 dark:text-rose-400 font-extrabold">{t.s6Row1Risk}</td>
+                      <td className="p-3 font-extrabold">
+                        <div className="text-slate-900 dark:text-slate-100">{t.s6Row1Name}</div>
+                        <div className="text-[10px] text-slate-500 font-normal">Ex: fact(n), fib(n), dfs(arbre)</div>
+                      </td>
+                      <td className="p-3 text-center font-mono font-extrabold">{t.s6Row1Time}</td>
+                      <td className="p-3 text-center text-rose-700 dark:text-rose-400 font-mono font-black">
+                        {t.s6Row1Space}
+                      </td>
+                      <td className="p-3 text-end">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t.s6Row1Risk}</span>
+                        </span>
+                      </td>
                     </tr>
+
+                    {/* Row 2: Récursion Terminale */}
                     <tr className={tokens.cardSubtle}>
-                      <td className="p-3 font-extrabold">{t.s6Row2Name}</td>
-                      <td className="p-3 font-mono">{t.s6Row2Time}</td>
-                      <td className="p-3 text-emerald-700 dark:text-emerald-400 font-extrabold">{t.s6Row2Space}</td>
-                      <td className="p-3 text-emerald-700 dark:text-emerald-400">{t.s6Row2Risk}</td>
+                      <td className="p-3 font-extrabold">
+                        <div className="text-slate-900 dark:text-slate-100">{t.s6Row2Name}</div>
+                        <div className="text-[10px] text-slate-500 font-normal">Ex: fact_tail(n, acc)</div>
+                      </td>
+                      <td className="p-3 text-center font-mono font-extrabold">{t.s6Row2Time}</td>
+                      <td className="p-3 text-center text-emerald-700 dark:text-emerald-400 font-mono font-black">
+                        {t.s6Row2Space}
+                      </td>
+                      <td className="p-3 text-end">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                          <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t.s6Row2Risk}</span>
+                        </span>
+                      </td>
                     </tr>
+
+                    {/* Row 3: Dé-récursivation (Boucle + Pile Manuelle) */}
                     <tr className={tokens.cardSubtle}>
-                      <td className="p-3 font-extrabold">{t.s6Row3Name}</td>
-                      <td className="p-3 font-mono text-blue-700 dark:text-sky-400 font-extrabold">{t.s6Row3Time}</td>
-                      <td className="p-3 text-blue-700 dark:text-sky-400 font-extrabold">{t.s6Row3Space}</td>
-                      <td className="p-3 text-emerald-700 dark:text-emerald-400 font-extrabold">{t.s6Row3Risk}</td>
+                      <td className="p-3 font-extrabold">
+                        <div className="text-blue-700 dark:text-sky-400">{t.s6Row3Name}</div>
+                        <div className="text-[10px] text-slate-500 font-normal">Ex: DFS Arbre (while + LIFO)</div>
+                      </td>
+                      <td className="p-3 text-center font-mono font-extrabold text-blue-700 dark:text-sky-400">
+                        {t.s6Row3Time}
+                      </td>
+                      <td className="p-3 text-center text-blue-700 dark:text-sky-400 font-mono font-black">
+                        {t.s6Row3Space}
+                      </td>
+                      <td className="p-3 text-end">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black bg-blue-500/15 text-blue-800 dark:text-sky-300 border border-blue-500/30">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t.s6Row3Risk}</span>
+                        </span>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div className={`p-4 rounded-xl border-l-4 border-emerald-600 text-xs font-extrabold leading-relaxed ${tokens.badgeEmerald}`}>
-              {t.s6Note}
+            <div className={`p-3 rounded-xl border-l-4 border-blue-600 text-xs font-bold leading-relaxed ${tokens.badgeBlue}`}>
+              {t.s6MatrixNote}
+            </div>
+          </div>
+
+          {/* Right Panel (5 cols): 3 Concise, Closed Engineering Decision Rules */}
+          <div className={`col-span-5 p-5 rounded-2xl border flex flex-col justify-between ${tokens.cardBg}`}>
+            <div>
+              <h3 className={`text-base font-black flex items-center gap-2 mb-2.5 ${tokens.textMain}`}>
+                <Workflow className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <span>{t.s6RulesTitle}</span>
+              </h3>
+
+              <div className="space-y-2.5">
+                {/* Rule 1: Tail -> Loop O(1) */}
+                <div className={`p-3 rounded-xl border ${tokens.cardSubtle}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase border ${tokens.badgeEmerald}`}>
+                      {t.s6Rule1Badge}
+                    </span>
+                    <span className="font-mono text-[11px] font-black text-emerald-700 dark:text-emerald-400">
+                      O(1) Mémoire
+                    </span>
+                  </div>
+                  <h4 className={`text-xs font-black leading-snug ${tokens.textMain}`}>
+                    {t.s6Rule1Title}
+                  </h4>
+                  <p className={`text-[11px] font-semibold mt-0.5 leading-relaxed ${tokens.textMuted}`}>
+                    {t.s6Rule1Desc}
+                  </p>
+                </div>
+
+                {/* Rule 2: Non-Tail -> while + manual stack in reverse push order */}
+                <div className={`p-3 rounded-xl border ${tokens.cardSubtle}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase border ${tokens.badgeBlue}`}>
+                      {t.s6Rule2Badge}
+                    </span>
+                    <span className="font-mono text-[11px] font-black text-blue-700 dark:text-sky-400">
+                      LIFO Inversé
+                    </span>
+                  </div>
+                  <h4 className={`text-xs font-black leading-snug ${tokens.textMain}`}>
+                    {t.s6Rule2Title}
+                  </h4>
+                  <p className={`text-[11px] font-semibold mt-0.5 leading-relaxed ${tokens.textMuted}`}>
+                    {t.s6Rule2Desc}
+                  </p>
+                </div>
+
+                {/* Rule 3: push/pop in O(1) preserves asymptotic time */}
+                <div className={`p-3 rounded-xl border ${tokens.cardSubtle}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase border ${tokens.badgeAmber}`}>
+                      {t.s6Rule3Badge}
+                    </span>
+                    <span className="font-mono text-[11px] font-black text-amber-700 dark:text-amber-400">
+                      O(1) Opérations
+                    </span>
+                  </div>
+                  <h4 className={`text-xs font-black leading-snug ${tokens.textMain}`}>
+                    {t.s6Rule3Title}
+                  </h4>
+                  <p className={`text-[11px] font-semibold mt-0.5 leading-relaxed ${tokens.textMuted}`}>
+                    {t.s6Rule3Desc}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className={`mt-1.5 px-3 py-1 rounded-lg text-[11px] font-bold text-center ${tokens.textSoft}`}>
+              {lang === 'ar' ? 'الخلاصة : الحفاظ على التعقيد الزمني O(n) وتأمين استقرار نظام التشغيل بنسبة 100%' : lang === 'en' ? 'Takeaway: Preserves O(n) runtime with 100% OS crash prevention' : 'Bilan : Préservation du temps O(n) et 100% de protection contre le crash OS'}
             </div>
           </div>
         </div>
@@ -1549,7 +1655,7 @@ export default function App() {
   return (
     <div
       dir={t.dir}
-      className={`min-h-screen w-full flex flex-col select-none transition-colors duration-200 ${tokens.appBg}`}
+      className={`h-screen w-screen flex flex-col select-none overflow-hidden transition-colors duration-200 ${tokens.appBg}`}
       style={{
         fontFamily:
           lang === 'ar'
@@ -1557,41 +1663,13 @@ export default function App() {
             : "'Plus Jakarta Sans', sans-serif"
       }}
     >
-      {/* Google Fonts & Crisp 6-Page Landscape Print CSS */}
+      {/* Google Fonts Preconnect & Stylesheet */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
-
-        @media print {
-          @page {
-            size: landscape;
-            margin: 0;
-          }
-          body {
-            background: #FFFFFF !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-          .print-deck {
-            display: block !important;
-          }
-          .print-page {
-            width: 1280px !important;
-            height: 720px !important;
-            page-break-after: always !important;
-            break-after: page !important;
-            box-shadow: none !important;
-            border: none !important;
-            transform: none !important;
-            margin: 0 !important;
-          }
-        }
       `}</style>
 
-      {/* Top Navigation Bar (Hidden on Print) */}
-      <header className={`no-print w-full px-4 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 z-20 ${tokens.toolbarBg}`}>
+      {/* Top Navigation Bar */}
+      <header className={`w-full px-4 py-2 border-b flex flex-wrap items-center justify-between gap-3 z-20 shrink-0 ${tokens.toolbarBg}`}>
         <div className="flex items-center gap-3">
           <span className="px-3 py-1 rounded-lg bg-blue-700 text-white text-xs font-black tracking-wide">
             {t.exposeBadge}
@@ -1635,23 +1713,22 @@ export default function App() {
           <button
             type="button"
             onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold border flex items-center gap-1.5 transition ${tokens.cardBg}`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border flex items-center gap-1.5 transition ${tokens.cardBg}`}
           >
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-blue-700" />}
             <span>{isDark ? t.daylightMode : t.darkMode}</span>
           </button>
 
-          {/* Print / PDF 6 Pages */}
+          {/* Fullscreen Toggle for Lecture Hall Projection */}
           <button
             type="button"
-            onClick={() => {
-              if (isDark) setTheme('light');
-              setTimeout(() => window.print(), 120);
-            }}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 shadow-sm transition"
+            onClick={toggleFullscreen}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border flex items-center gap-1.5 transition ${tokens.cardBg}`}
+            title={isFullscreen ? t.exitFullscreenBtn : t.fullscreenBtn}
+            aria-label={isFullscreen ? t.exitFullscreenBtn : t.fullscreenBtn}
           >
-            <Printer className="w-4 h-4" />
-            <span>{t.printBtn}</span>
+            {isFullscreen ? <Minimize2 className="w-4 h-4 text-blue-700" /> : <Maximize2 className="w-4 h-4 text-blue-700" />}
+            <span className="hidden sm:inline">{isFullscreen ? t.exitFullscreenBtn : t.fullscreenBtn}</span>
           </button>
         </div>
       </header>
@@ -1659,7 +1736,7 @@ export default function App() {
       {/* Main 16:9 Scaled Stage */}
       <main
         ref={stageWrapperRef}
-        className="no-print flex-1 flex items-center justify-center relative overflow-hidden p-3"
+        className="flex-1 flex items-center justify-center relative overflow-hidden p-2 sm:p-3"
       >
         <button
           type="button"
@@ -1695,15 +1772,6 @@ export default function App() {
           {lang === 'ar' ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
         </button>
       </main>
-
-      {/* Print-Only Sequential 6-Page Container */}
-      <div className="hidden print-deck">
-        {slides.map((renderFn, idx) => (
-          <div key={idx} className="print-page">
-            {renderFn()}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
